@@ -1,0 +1,100 @@
+%option lang = "c++"
+
+%decls %{
+    #include <string>
+    #include <unordered_map>
+    #include <iostream>
+
+    using StdString = std::string;
+    using Vars = std::unordered_map<std::string, int>;
+%}
+
+%{
+    #include "tree.hpp"
+%}
+
+%node AstNode %abstract %typedef 
+
+%node Expr AstNode %abstract
+
+%node BinaryExpr Expr %abstract = { 
+    Expr *left;
+    Expr *right; 
+}
+
+%node AddExpr BinaryExpr
+%node SubExpr BinaryExpr
+%node DivExpr BinaryExpr
+%node MultExpr BinaryExpr
+
+%node Number Expr = {
+    long value; 
+}
+
+%node Ident Expr = {
+    StdString name; 
+}
+
+%operation %virtual int evaluate(AstNode *this, Vars& vars)
+
+evaluate (AddExpr) {
+    return left->evaluate(vars) + right->evaluate(vars);
+}
+
+evaluate (SubExpr) {
+    return left->evaluate(vars) - right->evaluate(vars);
+}
+
+evaluate (MultExpr) {
+    return left->evaluate(vars) * right->evaluate(vars);
+}
+
+evaluate (DivExpr) {
+    int rightV = right->evaluate(vars);
+    if (rightV == 0){
+        std::cerr << "No se Divide entre 0\n";
+        return 0;
+    }    
+
+    return left->evaluate(vars) / rightV;
+}
+
+evaluate (Number){
+    return value;
+}
+
+evaluate (Ident){
+    auto it = vars.find(name);
+    if(it == vars.end()){
+        std::cerr << "No se encontro Variable\n";
+        return 0;
+    }
+
+    return it->second; 
+}
+
+%operation %virtual StdString toString(AstNode *this)
+
+toString(AddExpr) {
+    return left->toString() + " + " + right->toString();
+}
+
+toString(SubExpr) {
+    return left->toString() + " - " + right->toString();
+}
+
+toString(MultExpr) {
+    return left->toString() + " * " + right->toString();
+}
+
+toString(DivExpr) {
+    return left->toString() + " / " + right->toString();
+}
+
+toString(Number) {
+    return std::to_string(value);
+}
+
+toString(Ident) {
+    return name;
+}
