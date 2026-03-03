@@ -11,7 +11,7 @@ int main()
     ExprLexer my_lexer(input);
     std::unordered_map<std::string, int> vars{
         {"x", 10},
-        {"y", 20},
+        {"y", 2},
     };
 
     std::vector<AstNode *> nodes;
