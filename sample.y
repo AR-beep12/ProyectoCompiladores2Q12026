@@ -1,17 +1,29 @@
 %language "C++" 
 %require "3.2" 
 
-%token OP_PLUS "+" 
-%token OP_MULT "*"
-%token OP_DIV "/"
-%token OP_SUBS "-"
-%token OPEN_PAR "("
-%token CLOSE_PAR ")"
+%token R_INT R_VOID
+%token R_IF R_ELSE
+%token R_WHILE
+%token R_PRINT
+%token R_DEF
+%token R_RETURN
+%token R_REF
+
+%token OP_PLUS OP_SUBS OP_MULT OP_DIV OP_MOD
+
+%token OPEN_PAR CLOSE_PAR
+%token OPEN_BRAC CLOSE_BRAC
+%token SEMICOL COMMA
+
+%token OP_AND OP_OR OP_NOT ASSIGN
+
+%token OP_EQUAL OP_N_EQUAL 
+%token OP_LS OP_GR OP_LS_EQUAL OP_GR_EQUAL
+
 %token <int> NUMBER 
 %token <std::string> IDENT
 
-%nterm <AstNode*> input
-%nterm <Expr*> expr term factor
+%nterm <AstNode*> input expr term factor
 
 %define api.value.type variant
 
