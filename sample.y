@@ -13,7 +13,7 @@
 
 %token OPEN_PAR CLOSE_PAR
 %token OPEN_BRAC CLOSE_BRAC
-%token SEMICOL COMMA
+%token SEMICOL COMMA ARROW
 
 %token OP_AND OP_OR OP_NOT ASSIGN
 
@@ -22,6 +22,7 @@
 
 %token <int> NUMBER 
 %token <std::string> IDENT
+
 
 %nterm <AstNode*> input expr term factor
 
@@ -64,6 +65,69 @@ input: expr {
     $$ = $1; 
 }
 ;
+
+program: declaration program { } 
+	| 		{ $$ = nullptr; } 
+
+declaration: statement	{ $$ = $1}
+	| funcDecl 	{ $$ = $1}
+
+statementList: statement statementList {}
+	| 		{ $$ = nullptr; } 
+
+
+statement: varDecl 	{ $$ = $1}
+	| assignment 	{ $$ = $1}
+	| ifStmt 	{ $$ = $1}
+	| whileStmnt 	{ $$ = $1}
+	| printStmnt 	{ $$ = $1}
+	| returnStmnt 	{ $$ = $1}
+	| exprStmnt 	{ $$ = $1}
+	| block 	{ $$ = $1}
+
+
+varDecl: R_INT IDENT optVarDecl SEMICOL {}
+
+optVarDecl: ASSIGN expr { $$ = $2; } 
+	| 		{ $$ = nullptr; } 
+
+funcDecl: R_DEF IDENT OPEN_PAR optParamList CLOSE_PAR ARROW returnType optBlock {}
+
+optParamList: paramList { $$ = $1; }
+	| 		{ $$ = nullptr; } 
+
+paramList: param paramListExtra {}
+
+paramListExtra: COMMA param paramListExtra {}
+	| 		{ $$ = nullptr; } 
+
+param: R_INT IDENT {}
+	| R_INT R_REF IDENT {}
+
+returnType: R_INT {}
+	| R_VOID {}
+
+optBlock: block 	{ $$ = $1}
+	| 		{ $$ = nullptr; } 
+
+assignment: IDENT ASSIGN expr SEMICOL {}
+
+ifStmnt: R_IF OPEN_PAR expr CLOSE_PAR statement optElse {}
+
+optElse: R_ELSE statement { $$ = $2}
+	| 		{ $$ = nullptr; } 
+
+whileStmnt: R_WHILE OPEN_PAR expr CLOSE_PAR statement {}
+
+printStmnt: R_PRINT OPEN_PAR expr CLOSE_PAR SEMICOL {}
+
+returnStmnt: R_RETURN SEMICOL {}
+	| R_RETURN expr SEMICOL { $$ = $2}
+
+exprStmnt: funcCall SEMICOL { $$ = $1}
+
+block: OPEN_BRAC statementList CLOSE_BRAC { $$ = $2}
+
 
 //input: expr { std::cout << "Value " << $1->toString() << "\n"; }
 //;

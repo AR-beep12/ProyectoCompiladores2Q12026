@@ -37,6 +37,7 @@ using Token = ExprParser::Parser::token;
 "}" {return Token::CLOSE_BRAC;}
 ";" {return Token::SEMICOL;}
 "," {return Token::COMMA;}
+"->"{return Token::ARROW;}
 
 "&&" {return Token::OP_AND; }
 "||" {return Token::OP_OR; }
