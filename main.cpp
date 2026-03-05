@@ -8,6 +8,13 @@
 int main()
 {
     std::ifstream input("input.txt");
+
+    if (!input.is_open())
+    {
+        std::cerr << "Error: could not open input.txt\n";
+        return 1;
+    }
+
     ExprLexer my_lexer(input);
     std::unordered_map<std::string, int> vars{
         {"x", 10},
@@ -27,10 +34,7 @@ int main()
             if (!nodes.empty())
             {
                 AstNode *root = nodes[0];
-                std::cout << "AST toString: " << root->toString() << std::endl;
-
-                int evalResult = root->evaluate(vars);
-                std::cout << "Evaluation result: " << evalResult << std::endl;
+                std::cout << root->toString() << std::endl;
             }
         }
         else

@@ -6,25 +6,32 @@
     #include <iostream>
     #include <vector>
 
+    class AstNode;
+
     using StdString = std::string;
     using Vector = std::vector<AstNode*>;
     using Vars = std::unordered_map<std::string, int>;
-%}
-
-%{
-    #include "tree.hpp"
     
     enum class Type {
     Int,
     Void
     };
+%}
 
+%{
+    #include "tree.hpp"
+    
 %}
 
 %node AstNode %abstract %typedef = { 
     %nocreate int line = {0}; 
     %nocreate int column = {0}; 
 }
+
+
+
+ 
+
 
 %node Program AstNode = {
     Vector Statements;

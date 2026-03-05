@@ -26,14 +26,17 @@
 %nterm <AstNode*> input program statementList
 %nterm <AstNode*> declaration statement
 %nterm <AstNode*> varDecl optVarDecl
-%nterm <AstNode*> funcDecl optParamList paramList paramListExtra param  returnType optBlock
+%nterm <AstNode*> funcDecl optBlock
 %nterm <AstNode*> ifStmnt optElse
 %nterm <AstNode*> whileStmnt assignment printStmnt returnStmnt exprStmnt 
 %nterm <AstNode*> block funcCall
 %nterm <AstNode*> expr 
 %nterm <AstNode*> logicalOr logicalAnd equality comparison
 %nterm <AstNode*> term factor unary primary
-%nterm <AstNode*> optArgList argList
+%nterm <AstNode*> param
+%nterm <Type> returnType
+%nterm <Vector*> optParamList paramList paramListExtra optArgList argList
+
 
 %define api.value.type variant
 
@@ -70,12 +73,12 @@
 
 %% 
 
-input: program { $$ = $1; }
+input: program { $$ = $1; Ast.push_back($1); }
 ;
 
 program: program declaration {  $$ = $1;
-                                if($2) $$->Statements.push_back($2); }
-    |                        {  $$ = new Program(); }
+                                if($2) static_cast<Program*>($$)->Statements.push_back($2); }
+    |                        {  $$ = new Program(Vector{}); }
 ;
 
 declaration: statement         { $$ = $1; }
@@ -84,8 +87,8 @@ declaration: statement         { $$ = $1; }
 
 
 statementList : statementList statement { $$ = $1; 
-                                          if($2) $$->statements.push_back($2); } 
-    |                                   {   $$ = new Block(); }
+                                          if($2) static_cast<Block*>($$)->statements.push_back($2); } 
+    |                                   {   $$ = new Block(Vector{}); }
 ;
 
 statement: varDecl             { $$ = $1; }
@@ -105,16 +108,16 @@ optVarDecl: ASSIGN expr  { $$ = $2; }
     |                    { $$ = nullptr; }
 ;
 
-funcDecl: R_DEF IDENT OPEN_PAR optParamList CLOSE_PAR ARROW returnType optBlock { $$ = new FuncDeclStmnt($2, $7, $4, static_cast<AstNode*>($8)); }
+funcDecl: R_DEF IDENT OPEN_PAR optParamList CLOSE_PAR ARROW returnType optBlock { $$ = new FuncDeclStmnt($2, $7, *$4, static_cast<AstNode*>($8)); }
 ;
 
 optParamList: paramList  { $$ = $1; }
-    |                    { $$ = new std::vector<AstNode*>(); }
+    |                    { $$ = new Vector(); }
 ;
 
 paramList: paramList COMMA param { $$ = $1;
                                    $$->push_back($3); }
-    |   param                    { $$ = new std::vector<AstNode*>();
+    |   param                    { $$ = new Vector();
                                    $$->push_back($1); }
 ;
 
@@ -127,7 +130,7 @@ returnType: R_INT { $$ = Type::Int;}
 ;
 
 optBlock: block    { $$ = $1; }
-    |              { $$ = new Block(); }
+    |              { $$ = new Block(Vector{}); }
 ;
 
 assignment: IDENT ASSIGN expr SEMICOL                   { $$ = new Assignment($1, static_cast<AstNode*>($3)); }
@@ -200,18 +203,18 @@ unary: OP_NOT unary 	{ $$ = new NotExpr($2); }
 
 primary: NUMBER         { $$ = new Number($1); }
     | IDENT        { $$ = new Ident($1,0);  }
-    | IDENT OPEN_PAR optArgList CLOSE_PAR {$$ = new FuncCall($1,$3); }
+    | IDENT OPEN_PAR optArgList CLOSE_PAR {$$ = new FuncCall($1,*$3);}
     | OPEN_PAR expr CLOSE_PAR  { $$ = $2; }
 ;
 
 optArgList: argList 	{ $$ = $1; }
-    |                   { $$ = new std::vector<AstNode*>(); }
+    |                   { $$ = new Vector(); }
 ;
 
-argList: expr            { $$ = new std::vector<AstNode*>();
-                           $$->push_back($1)}
+argList: expr            { $$ = new Vector();
+                           $$->push_back($1);}
     | argList COMMA expr { $$ = $1;
-                           $$-> push_back($3)}
+                           $$-> push_back($3);}
 ;
 
 %%
