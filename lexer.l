@@ -22,7 +22,7 @@ using Token = ExprParser::Parser::token;
 "ref" {return Token::R_REF;}
 
 [a-zA-Z_][a-zA-Z0-9_]* {yylval.emplace<std::string>(text()); return Token::IDENT;}
-(-|+)?[0-9]+ {yylval.emplace<long>(std::stoi(text())); return Token::NUMBER;}
+("-"|"+")?[0-9]+ {yylval.emplace<long>(std::stoi(text())); return Token::NUMBER;}
 
 
 "+" {return Token::OP_PLUS;}
@@ -37,7 +37,7 @@ using Token = ExprParser::Parser::token;
 "}" {return Token::CLOSE_BRAC;}
 ";" {return Token::SEMICOL;}
 "," {return Token::COMMA;}
-"->"{return Token::ARROW;}
+"->" {return Token::ARROW;}
 
 "&&" {return Token::OP_AND; }
 "||" {return Token::OP_OR; }

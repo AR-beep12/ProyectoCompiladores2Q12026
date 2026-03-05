@@ -23,10 +23,11 @@ add_custom_command(
 )
 
 #all about parser-------------------------------------
-set (PARSER_SOURCE_FILE "${CMAKE_SOURCE_DIR}/sample.y")
+set (PARSER_SOURCE_FILE "${CMAKE_SOURCE_DIR}/parser.y")
 
 BISON_TARGET(ExprParser ${PARSER_SOURCE_FILE} ${CMAKE_BINARY_DIR}/ExprParser.cpp
-              DEFINES_FILE ${CMAKE_BINARY_DIR}/ExprParser.hpp) 
+              DEFINES_FILE ${CMAKE_BINARY_DIR}/ExprParser.hpp
+              COMPILE_FLAGS "-Wconflicts-sr -Wcounterexamples") 
 
 
 #all about ast-------------------------------------

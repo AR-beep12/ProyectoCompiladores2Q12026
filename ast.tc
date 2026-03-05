@@ -4,28 +4,33 @@
     #include <string>
     #include <unordered_map>
     #include <iostream>
+    #include <vector>
 
     using StdString = std::string;
+    using Vector = std::vector<AstNode*>;
     using Vars = std::unordered_map<std::string, int>;
 %}
 
 %{
     #include "tree.hpp"
+    
+    enum class Type {
+    Int,
+    Void
+    };
+
 %}
 
-%node AstNode %abstract %typedef 
-
-%node Expr AstNode %abstract
-
-%node BinaryExpr Expr %abstract = { 
-    Expr *left;
-    Expr *right; 
+%node AstNode %abstract %typedef = { 
+    %nocreate int line = {0}; 
+    %nocreate int column = {0}; 
 }
 
-%node AddExpr BinaryExpr
-%node SubExpr BinaryExpr
-%node DivExpr BinaryExpr
-%node MultExpr BinaryExpr
+%node Program AstNode = {
+    Vector Statements;
+}
+
+%node Expr AstNode %abstract 
 
 %node Number Expr = {
     long value; 
@@ -33,68 +38,241 @@
 
 %node Ident Expr = {
     StdString name; 
+    bool ref;
 }
 
-%operation %virtual int evaluate(AstNode *this, Vars& vars)
-
-evaluate (AddExpr) {
-    return left->evaluate(vars) + right->evaluate(vars);
+%node FuncCall Expr = {
+    StdString name; 
+    Vector args;
 }
 
-evaluate (SubExpr) {
-    return left->evaluate(vars) - right->evaluate(vars);
+%node BinaryExpr Expr %abstract = { 
+    AstNode *leftExpr;
+    AstNode *rightExpr; 
 }
 
-evaluate (MultExpr) {
-    return left->evaluate(vars) * right->evaluate(vars);
+%node AddExpr BinaryExpr
+%node SubExpr BinaryExpr
+%node DivExpr BinaryExpr
+%node MultExpr BinaryExpr
+%node ModExpr BinaryExpr
+
+%node AndExpr BinaryExpr
+%node OrExpr BinaryExpr
+
+%node EqualExpr BinaryExpr
+%node NotEqualExpr BinaryExpr
+
+%node LessExpr BinaryExpr
+%node GreaterExpr BinaryExpr
+%node LessEqualExpr BinaryExpr
+%node GreaterEqualExpr BinaryExpr
+
+%node UnaryExpr Expr %abstract = {
+    AstNode* operand;
 }
 
-evaluate (DivExpr) {
-    int rightV = right->evaluate(vars);
-    if (rightV == 0){
-        std::cerr << "No se Divide entre 0\n";
-        return 0;
-    }    
+%node NegExpr UnaryExpr
+%node NotExpr UnaryExpr
 
-    return left->evaluate(vars) / rightV;
+%node Statement AstNode %abstract
+
+%node VarDeclStmnt Statement = {
+    Type returnType;
+    StdString name;
+    AstNode* value;
 }
 
-evaluate (Number){
-    return value;
+%node FuncDeclStmnt Statement = {
+    StdString name;
+    Type returnType;  
+    Vector params;
+    AstNode* block;
 }
 
-evaluate (Ident){
-    auto it = vars.find(name);
-    if(it == vars.end()){
-        std::cerr << "No se encontro Variable\n";
-        return 0;
-    }
-
-    return it->second; 
+%node Assignment Statement = {
+    StdString name;
+    AstNode* value;
 }
+
+%node IfStmnt Statement = {
+    AstNode* condition;
+    AstNode* trueBlock;
+    AstNode* falseBlock;
+}
+
+%node WhileStmnt Statement = {
+    AstNode* condition;
+    AstNode* block;
+}
+
+%node PrintStmnt Statement = {
+    AstNode* expression;
+}
+
+%node ReturnStmnt Statement = {
+    AstNode* value;
+}
+
+%node Block Statement = {
+    Vector statements;
+}
+
 
 %operation %virtual StdString toString(AstNode *this)
 
-toString(AddExpr) {
-    return left->toString() + " + " + right->toString();
+toString(Program) {
+    StdString result;
+    for (auto stmt : Statements) {
+        result += stmt->toString() + "\n";
+    }
+    return result;
 }
 
-toString(SubExpr) {
-    return left->toString() + " - " + right->toString();
-}
-
-toString(MultExpr) {
-    return left->toString() + " * " + right->toString();
-}
-
-toString(DivExpr) {
-    return left->toString() + " / " + right->toString();
-}
-
+// Number
 toString(Number) {
     return std::to_string(value);
 }
 
+//Ident
 toString(Ident) {
     return name;
+}
+
+//FuncCall
+toString(FuncCall) {
+    StdString argsStr;
+    for (size_t i = 0; i < args.size(); ++i) {
+        argsStr += args[i]->toString();
+        if (i + 1 < args.size()) argsStr += ", ";
+    }
+    return name + "(" + argsStr + ")";
+}
+
+// AddExpr
+toString(AddExpr) {
+    return leftExpr->toString() + " + " + rightExpr->toString();
+}
+
+// SubExpr
+toString(SubExpr) {
+    return leftExpr->toString() + " - " + rightExpr->toString();
+}
+
+// MultExpr
+toString(MultExpr) {
+    return leftExpr->toString() + " * " + rightExpr->toString();
+}
+
+// DivExpr
+toString(DivExpr) {
+    return leftExpr->toString() + " / " + rightExpr->toString();
+}
+
+// ModExpr
+toString(ModExpr) {
+    return leftExpr->toString() + " % " + rightExpr->toString();
+}
+
+// AndExpr
+toString(AndExpr) {
+    return leftExpr->toString() + " && " + rightExpr->toString();
+}
+
+// OrExpr
+toString(OrExpr) {
+    return leftExpr->toString() + " || " + rightExpr->toString();
+}
+
+// EqualExpr
+toString(EqualExpr) {
+    return leftExpr->toString() + " == " + rightExpr->toString();
+}
+
+// NotEqualExpr
+toString(NotEqualExpr) {
+    return leftExpr->toString() + " != " + rightExpr->toString();
+}
+
+// LessExpr
+toString(LessExpr) {
+    return leftExpr->toString() + " < " + rightExpr->toString();
+}
+
+// GreaterExpr
+toString(GreaterExpr) {
+    return leftExpr->toString() + " > " + rightExpr->toString();
+}
+
+// LessEqualExpr
+toString(LessEqualExpr) {
+    return leftExpr->toString() + " <= " + rightExpr->toString();
+}
+
+// GreaterEqualExpr
+toString(GreaterEqualExpr) {
+    return leftExpr->toString() + " >= " + rightExpr->toString();
+}
+
+// NegExpr
+toString(NegExpr) {
+    return "-" + operand->toString();
+}
+
+// NotExpr
+toString(NotExpr) {
+    return "!" + operand->toString();
+}
+
+// VarDeclStmnt
+toString(VarDeclStmnt) {
+    return "int " + name + " = " + (value ? value->toString() : "null");
+}
+
+// FuncDeclStmnt
+toString(FuncDeclStmnt) {
+    StdString paramsStr;
+    for (size_t i = 0; i < params.size(); ++i) {
+        paramsStr += params[i]->toString();
+        if (i + 1 < params.size()) paramsStr += ", ";
+    }
+    StdString type = (returnType == Type::Int) ? "int " : "void ";	
+    return type + name + "(" + paramsStr + ") " + block->toString();
+}
+
+// Assignment
+toString(Assignment) {
+    return name + " = " + value->toString();
+}
+
+// IfStmnt
+toString(IfStmnt) {
+    StdString result = "if (" + condition->toString() + ") " + trueBlock->toString();
+    if (falseBlock) result += " else " + falseBlock->toString();
+    return result;
+}
+
+// WhileStmnt
+toString(WhileStmnt) {
+    return "while (" + condition->toString() + ") " + block->toString();
+}
+
+// PrintStmnt
+toString(PrintStmnt) {
+    return "print(" + expression->toString() + ")";
+}
+
+// ReturnStmnt
+toString(ReturnStmnt) {
+    return "return " + value->toString();
+}
+
+// Block
+toString(Block) {
+    StdString result = "{\n";
+    for (auto stmt : statements) {
+        result += "  " + stmt->toString() + "\n";
+    }
+    result += "}";
+    return result;
 }
