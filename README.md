@@ -2,129 +2,102 @@
 
 
 ## Grammar 
-program → declaration program 
-	| E
+program → program declaration
+        | E
 
-declaration →   statement
-		| funcDecl
+declaration → varDecl
+            | funcDecl
 
-statementList → statement statementList
-		| E
+statementList → statementList statement
+              | E
 
-statement → 	 varDecl
-		| assignment
-		| ifStmt
-		| whileStmt
-		| printStmt
-		| returnStmt
-		| exprStmt
-		| block
-
+statement → varDecl
+          | assignment
+          | ifStmt
+          | whileStmt
+          | printStmt
+          | returnStmt
+          | exprStmt
+          | block
 
 varDecl → "int" IDENTIFIER optVarDecl ";"
 
-optVarDecl → "=" expression 
-	| E
+optVarDecl → "=" expression
+           | E
 
 funcDecl → "def" IDENTIFIER "(" optParamList ")" "->" returnType optBlock
 
 optParamList → paramList
-             | ε
+             | E
 
-paramList → param paramListExtra
-
-paramListExtra → "," param paramListExtra
-		| ε
+paramList → paramList "," param
+          | param
 
 param → "int" IDENTIFIER
-	| "int" "ref" IDENTIFIER
+      | "int" "ref" IDENTIFIER
 
 returnType → "int"
-	   | "void"
+           | "void"
 
 optBlock → block
-   	 | ε
-
+         | E
 
 assignment → IDENTIFIER "=" expression ";"
 
 ifStmt → "if" "(" expression ")" statement optElse
 
 optElse → "else" statement
-	| E
+        | E
 
 whileStmt → "while" "(" expression ")" statement
 
 printStmt → "print" "(" expression ")" ";"
 
 returnStmt → "return" ";"
-	   | "return" expression ";"
-
+           | "return" expression ";"
 
 exprStmt → funcCall ";"
 
 block → "{" statementList "}"
 
-
 expression → logicalOr
 
-logicalOr → logicalAnd logicalOrExtra
+logicalOr → logicalOr "||" logicalAnd
+          | logicalAnd
 
-logicalOrExtra → "||" logicalAnd logicalOrExtra
-		| E
+logicalAnd → logicalAnd "&&" equality
+           | equality
 
-logicalAnd → equality logicalAndExtra
+equality → equality "==" comparison
+         | equality "!=" comparison
+         | comparison
 
-logicalAndExtra → "&&" equality logicalAndExtra
-		  |E
+comparison → comparison "<" term
+           | comparison ">" term
+           | comparison "<=" term
+           | comparison ">=" term
+           | term
 
-equality → comparison equalityExtra
-	
-equalityExtra → "==" comparison equalityExtra
-		| "!=" comparison equalityExtra
-		| E
+term → term "+" factor
+     | term "-" factor
+     | factor
 
-comparison → term comparisonExtra 
-
-comparisonExtra → LogOp term comparisonExtra
-		| E
-
-LogOp → "<"
-	| ">" 
-	| "<=" 
-	| ">="
-	
-term → factor termExtra
-
-termExtra → termOp factor termExtra
-	  | E
-
-termOp → "+" 
-	| "-"
-
-factor → unary factorExtra
-factorExtra → factorOp unary factorExtra
-	    | E
-
-factorOp → "*" 
-	| "/" 
-	| "%"
+factor → factor "*" unary
+       | factor "/" unary
+       | factor "%" unary
+       | unary
 
 unary → "!" unary
-	| "-" unary
-	| primary
+      | "-" unary
+      | primary
 
-primary → INTEGER 
-	| IDENTIFIER primaryExtra
-	| "(" expression ")"
-
-primaryExtra → "(" optArgList ")"
-	      | E
+primary → INTEGER
+        | IDENTIFIER
+        | IDENTIFIER "(" optArgList ")"
+        | "(" expression ")"
 
 optArgList → argList
-	   | E
+           | E
 
-argList → expression argListExtra
-
-argListExtra → "," expression argListExtra
-	     | E
+argList → argList "," expression
+        | expression
